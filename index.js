@@ -1,54 +1,56 @@
-const OpenAI = require("openai");
 const express = require("express");
+const { Configuration, OpenAIApi } = require("openai");
+require("dotenv").config();
 const bodyParser = require("body-parser");
 const path = require("path");
-require("dotenv").config();
 
-// Validate API key
-if (!process.env.OPENAI_API_KEY) {
-    console.error("Error: OPENAI_API_KEY is not set in the .env file.");
-    process.exit(1);
-}
-
-// Configure OpenAI API
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-});
-
-// Initialize Express app
+// Create a new Express app
 const app = express();
+
+// Middleware to parse incoming request bodies as JSON
 app.use(bodyParser.json());
-app.use(express.static("public")); // Serve static files
+app.use(bodyParser.urlencoded({ extended: true }));
 
-// API endpoint for chat
+// Serve static files from the public directory
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Set up the OpenAI API client
+const configuration = new Configuration({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+const openai = new OpenAIApi(configuration);
+
+// Define a conversation context prompt
+const conversationContextPrompt =
+  "The following is a conversation with an AI assistant. The assistant is helpful, creative, clever, and very friendly.\n\nHuman: Hello, who are you?\nAI: I am an AI created by OpenAI. How can I help you today?\nHuman: ";
+
+// Define an endpoint to handle incoming requests
 app.post("/api/chat", async (req, res) => {
-    const { message } = req.body;
+  try {
+    // Extract the user's message from the request body
+    const message = req.body.message;
 
-    if (!message) {
-        return res.status(400).send({ error: "Message is required" });
-    }
+    // Call the OpenAI API to complete the message
+    const response = await openai.createCompletion({
+      model: "text-davinci-003",
+      prompt: conversationContextPrompt + message,
+      temperature: 0.9,
+      max_tokens: 150,
+      top_p: 1,
+      frequency_penalty: 0,
+      presence_penalty: 0.6,
+      stop: [" Human:", " AI:"],
+    });
 
-    try {
-        const response = await openai.chat.completions.create({
-            model: "gpt-4o",
-            messages: [{ role: "user", content: message }],
-        });
-
-        const reply = response.choices[0].message.content;
-        res.send({ reply });
-    } catch (error) {
-        console.error("Error communicating with OpenAI:", error.response?.data || error.message);
-        res.status(500).send({ error: "Failed to communicate with OpenAI API" });
-    }
+    // Send the response data back to the client
+    res.json({ reply: response.data.choices[0].text.trim() });
+  } catch (error) {
+    console.error("Error communicating with OpenAI:", error);
+    res.status(500).json({ error: "An error occurred while communicating with the OpenAI API." });
+  }
 });
 
-// Serve chat HTML
-app.get("/chat", (req, res) => {
-    res.sendFile(path.join(__dirname, "public", "chat.html"));
-});
-
-// Start the server
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`ChatGPT bot is running at http://localhost:${PORT}/chat`);
+// Start the Express app and listen on port 3000
+app.listen(3000, () => {
+  console.log("Conversational AI assistant listening on port 3000!");
 });
