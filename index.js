@@ -49,6 +49,11 @@ app.post("/api/chat", async (req, res) => {
   }
 });
 
+// Serve the chat.html file when the root URL is accessed
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'chat.html'));
+});
+
 // Start the Express app and listen on port 3000
 app.listen(3000, () => {
   console.log("Conversational AI assistant listening on port 3000!");
