@@ -26,12 +26,12 @@ const conversationContextPrompt =
 
 // Define an endpoint to handle incoming requests
 app.post("/api/chat", async (req, res) => {
-  console.log("Received message:", req.body.message); // Log the incoming message
+  console.log("Received message:", req.body.message);
   try {
     const message = req.body.message;
 
     const response = await openai.createCompletion({
-      model: "gpt-4o-2024-08-06",
+      model: "gpt-4", // Use a valid model name
       prompt: conversationContextPrompt + message,
       temperature: 0.9,
       max_tokens: 150,
@@ -41,11 +41,12 @@ app.post("/api/chat", async (req, res) => {
       stop: [" Human:", " AI:"],
     });
 
-    console.log("OpenAI response:", response.data); // Log the OpenAI response
+    console.log("OpenAI response:", response.data);
     res.json({ reply: response.data.choices[0].text.trim() });
   } catch (error) {
     console.error("Error communicating with OpenAI:", error);
-    res.status(500).json({ error: "An error occurred while communicating with the OpenAI API." });
+    const errorMessage = error.response ? error.response.data : "An error occurred.";
+    res.status(500).json({ error: errorMessage });
   }
 });
 
