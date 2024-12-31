@@ -4,25 +4,24 @@ const bodyParser = require('body-parser');
 const { Configuration, OpenAIApi } = require('openai');
 const path = require('path');
 
-// Load API key from .env
-const openaiApiKey = process.env.OPENAI_API_KEY;
-if (!openaiApiKey) {
-    console.error("Error: OPENAI_API_KEY is not set in the .env file.");
+// Validate that the API key is set
+if (!process.env.OPENAI_API_KEY) {
+    console.error('Error: OPENAI_API_KEY is not set in the .env file.');
     process.exit(1);
 }
 
-// Initialize OpenAI API
+// Initialize OpenAI configuration
 const configuration = new Configuration({
-    apiKey: openaiApiKey,
+    apiKey: process.env.OPENAI_API_KEY,
 });
 const openai = new OpenAIApi(configuration);
 
-// Initialize Express
+// Initialize Express app
 const app = express();
 app.use(bodyParser.json());
-app.use(express.static('public')); // Serve static files from "public" directory
+app.use(express.static('public')); // Serve static files
 
-// Endpoint for chat API
+// API endpoint for chat
 app.post('/api/chat', async (req, res) => {
     const { message } = req.body;
 
@@ -39,19 +38,18 @@ app.post('/api/chat', async (req, res) => {
         const reply = response.data.choices[0].message.content;
         res.send({ reply });
     } catch (error) {
-        console.error('Error communicating with OpenAI:', error);
+        console.error('Error communicating with OpenAI:', error.message);
         res.status(500).send({ error: 'Failed to communicate with OpenAI API' });
     }
 });
 
-// Serve the chat HTML page
+// Serve chat HTML
 app.get('/chat', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'chat.html'));
 });
 
 // Start the server
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`ChatGPT bot running on http://localhost:${PORT}`);
+    console.log(`ChatGPT bot is running at http://localhost:${PORT}`);
 });
-  
