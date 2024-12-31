@@ -26,23 +26,22 @@ const conversationContextPrompt =
 
 // Define an endpoint to handle incoming requests
 app.post("/api/chat", async (req, res) => {
+  console.log("Received message:", req.body.message); // Log the incoming message
   try {
-    // Extract the user's message from the request body
     const message = req.body.message;
 
-    // Call the OpenAI API to complete the message
     const response = await openai.createCompletion({
-      model: "gpt-4o",
+      model: "text-davinci-003",
       prompt: conversationContextPrompt + message,
       temperature: 0.9,
-      max_tokens: 128,
+      max_tokens: 150,
       top_p: 1,
       frequency_penalty: 0,
       presence_penalty: 0.6,
       stop: [" Human:", " AI:"],
     });
 
-    // Send the response data back to the client
+    console.log("OpenAI response:", response.data); // Log the OpenAI response
     res.json({ reply: response.data.choices[0].text.trim() });
   } catch (error) {
     console.error("Error communicating with OpenAI:", error);
