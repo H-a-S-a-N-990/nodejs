@@ -31,7 +31,7 @@ app.post("/api/chat", async (req, res) => {
     const message = req.body.message;
 
     const response = await openai.createCompletion({
-      model: "text-davinci-003",
+      model: "gpt-4o-2024-08-06",
       prompt: conversationContextPrompt + message,
       temperature: 0.9,
       max_tokens: 150,
