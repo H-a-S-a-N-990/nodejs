@@ -32,10 +32,10 @@ app.post("/api/chat", async (req, res) => {
 
     // Call the OpenAI API to complete the message
     const response = await openai.createCompletion({
-      model: "text-davinci-003",
+      model: "gpt-4o",
       prompt: conversationContextPrompt + message,
       temperature: 0.9,
-      max_tokens: 150,
+      max_tokens: 128,
       top_p: 1,
       frequency_penalty: 0,
       presence_penalty: 0.6,
