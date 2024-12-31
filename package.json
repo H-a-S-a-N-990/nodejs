@@ -1,0 +1,25 @@
+{
+  "name": "chatgpt-bot",
+  "version": "1.0.0",
+  "description": "A Node.js bot that uses OpenAI's GPT-4 model for chat with a web interface.",
+  "main": "chatgpt-bot.js",
+  "scripts": {
+    "start": "node chatgpt-bot.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.0.0",
+    "openai": "^4.0.0",
+    "express": "^4.18.2",
+    "body-parser": "^1.20.2",
+    "path": "^0.12.7"
+  },
+  "keywords": [
+    "chatgpt",
+    "bot",
+    "openai",
+    "nodejs",
+    "web-interface"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
+}
