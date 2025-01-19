@@ -1,61 +1,65 @@
+require("dotenv").config();
 const express = require("express");
 const { Configuration, OpenAIApi } = require("openai");
-require("dotenv").config();
-const bodyParser = require("body-parser");
+const multer = require("multer");
+const fs = require("fs");
 const path = require("path");
+const pdfParse = require("pdf-parse");
+const docxParser = require("docx-parser");
 
-// Create a new Express app
 const app = express();
+const port = 3000;
 
-// Middleware to parse incoming request bodies as JSON
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-
-// Serve static files from the public directory
-app.use(express.static(path.join(__dirname, 'public')));
-
-// Set up the OpenAI API client
+// Set up OpenAI API
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
 });
 const openai = new OpenAIApi(configuration);
 
-// Define a conversation context prompt
-const conversationContextPrompt =
-  "The following is a conversation with an AI assistant. The assistant is helpful, creative, clever, and very friendly.\n\nHuman: Hello, who are you?\nAI: I am an AI created by OpenAI. How can I help you today?\nHuman: ";
+// Set up file upload using Multer
+const upload = multer({ dest: "uploads/" });
 
-// Define an endpoint to handle incoming requests
-app.post("/api/chat", async (req, res) => {
-  console.log("Received message:", req.body.message);
+// Serve static files (HTML, CSS)
+app.use(express.static("public"));
+app.use(express.json());
+
+// Route to handle file upload and analysis
+app.post("/upload", upload.single("file"), async (req, res) => {
+  const filePath = path.join(__dirname, "uploads", req.file.filename);
+  let fileContent = "";
+
+  // Read file based on type
   try {
-    const message = req.body.message;
+    if (req.file.mimetype === "application/pdf") {
+      const data = await pdfParse(fs.readFileSync(filePath));
+      fileContent = data.text;
+    } else if (req.file.mimetype === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+      const docxData = await docxParser.parseDocx(filePath);
+      fileContent = docxData;
+    } else if (req.file.mimetype === "text/plain") {
+      fileContent = fs.readFileSync(filePath, "utf8");
+    } else {
+      return res.status(400).json({ error: "Unsupported file type" });
+    }
 
-    const response = await openai.createCompletion({
-      model: "gpt-4", // Use a valid model name
-      prompt: conversationContextPrompt + message,
-      temperature: 0.9,
-      max_tokens: 150,
-      top_p: 1,
-      frequency_penalty: 0,
-      presence_penalty: 0.6,
-      stop: [" Human:", " AI:"],
+    // Clean up uploaded file
+    fs.unlinkSync(filePath);
+
+    // Get ChatGPT's response
+    const response = await openai.createChatCompletion({
+      model: "gpt-4",
+      messages: [{ role: "user", content: `Analyze the following text: ${fileContent}` }],
     });
 
-    console.log("OpenAI response:", response.data);
-    res.json({ reply: response.data.choices[0].text.trim() });
+    const reply = response.data.choices[0].message.content;
+    res.json({ reply });
   } catch (error) {
-    console.error("Error communicating with OpenAI:", error);
-    const errorMessage = error.response ? error.response.data : "An error occurred.";
-    res.status(500).json({ error: errorMessage });
+    console.error("Error processing file or OpenAI API:", error);
+    res.status(500).json({ error: "An error occurred while processing the file" });
   }
 });
 
-// Serve the chat.html file when the root URL is accessed
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'chat.html'));
-});
-
-// Start the Express app and listen on port 3000
-app.listen(3000, () => {
-  console.log("Conversational AI assistant listening on port 3000!");
+// Start the server
+app.listen(port, () => {
+  console.log(`Server is running on http://localhost:${port}`);
 });
