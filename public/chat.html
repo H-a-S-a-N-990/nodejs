@@ -3,96 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat with AI</title>
-    <link rel="stylesheet" href="styles.css"> <!-- Optional: Link to a CSS file for styling -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            margin: 0;
-            padding: 20px;
-        }
-        #chat-container {
-            max-width: 600px;
-            margin: auto;
-            background: white;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            padding: 20px;
-        }
-        #messages {
-            height: 300px;
-            overflow-y: auto;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            padding: 10px;
-            margin-bottom: 10px;
-        }
-        .message {
-            margin: 10px 0;
-        }
-        .human {
-            text-align: right;
-            color: blue;
-        }
-        .ai {
-            text-align: left;
-            color: green;
-        }
-        #user-input {
-            width: calc(100% - 22px);
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-        #send-button {
-            padding: 10px 15px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        #send-button:hover {
-            background-color: #0056b3;
-        }
-    </style>
+    <title>ChatGPT File Analyzer</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="chat-container">
-        <h2>Chat with AI</h2>
-        <div id="messages"></div>
-        <input type="text" id="user-input" placeholder="Type your message here..." />
-        <button id="send-button">Send</button>
+    <div class="container">
+        <h1>Upload a File for ChatGPT Analysis</h1>
+        <form id="uploadForm" enctype="multipart/form-data">
+            <input type="file" name="file" accept=".txt,.pdf,.docx" required>
+            <button type="submit">Upload and Analyze</button>
+        </form>
+        <div id="response"></div>
     </div>
 
     <script>
-        $(document).ready(function() {
-            $('#send-button').click(function() {
-                const userMessage = $('#user-input').val();
-                if (userMessage.trim() === '') return;
-
-                // Display the user's message
-                $('#messages').append(`<div class="message human">${userMessage}</div>`);
-                $('#user-input').val(''); // Clear the input field
-
-                // Send the message to the server
-                $.post('/api/chat', { message: userMessage }, function(data) {
-                    // Display the AI's response
-                    $('#messages').append(`<div class="message ai">${data.reply}</div>`);
-                    $('#messages').scrollTop($('#messages')[0].scrollHeight); // Scroll to the bottom
-                }).fail(function() {
-                    $('#messages').append(`<div class="message ai">Error: Unable to get a response from the AI.</div>`);
-                });
+        document.getElementById("uploadForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            formData.append("file", document.querySelector('input[type="file"]').files[0]);
+            
+            const response = await fetch("/upload", {
+                method: "POST",
+                body: formData,
             });
-
-            // Allow pressing Enter to send the message
-            $('#user-input').keypress(function(e) {
-                if (e.which === 13) {
-                    $('#send-button').click();
-                }
-            });
+            
+            const result = await response.json();
+            document.getElementById("response").innerHTML = `<p><strong>ChatGPT's Response:</strong> ${result.reply}</p>`;
         });
     </script>
 </body>
