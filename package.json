@@ -1,17 +1,23 @@
 {
-  "name": "nodeaiassistant",
+  "name": "chatgpt-file-analyzer",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "A Node.js app to upload files and analyze them using OpenAI's ChatGPT",
+  "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "openai": "^3.0.0",
+    "dotenv": "^16.0.3",
+    "multer": "^1.4.5-lts.1",
+    "pdf-parse": "^1.1.1",
+    "docx-parser": "^0.2.5"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">=14.0.0"
   },
   "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "body-parser": "^1.20.1",
-    "dotenv": "^16.0.3",
-    "express": "^4.18.2",
-    "openai": "^3.1.0"
-  }
+  "license": "ISC"
 }
